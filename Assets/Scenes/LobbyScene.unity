@@ -2406,6 +2406,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChatUI
   inputField: {fileID: 847257003}
+  chatContent: {fileID: 1269932780}
 --- !u!1 &1623149202
 GameObject:
   m_ObjectHideFlags: 0
