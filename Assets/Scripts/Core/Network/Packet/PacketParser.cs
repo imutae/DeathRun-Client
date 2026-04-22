@@ -45,4 +45,9 @@ public class PacketParser
 
         return true;
     }
+
+    public void Clear()
+    {
+        _buffer.Clear();
+    }
 }

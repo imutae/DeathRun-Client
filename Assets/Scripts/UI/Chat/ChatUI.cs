@@ -6,8 +6,8 @@ public class ChatUI : MonoBehaviour
     [SerializeField]
     private TMP_InputField inputField = null;
 
-    //[SerializeField]
-    //private RectTransform chatContent = null;
+    [SerializeField]
+    private RectTransform chatContent = null;
 
     public void OnClickSendButton()
     {
