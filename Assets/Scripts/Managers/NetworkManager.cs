@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class NetworkManager : MonoSingleton<NetworkManager>
 {
@@ -15,6 +16,13 @@ public class NetworkManager : MonoSingleton<NetworkManager>
 
     private readonly object packetQueueLock = new object();
     private readonly object logQueueLock = new object();
+
+    private UnityAction<ChatPacket> onChatReceived;
+    public event UnityAction<ChatPacket> OnChatReceived
+    {
+        add { onChatReceived += value; }
+        remove { onChatReceived -= value; }
+    }
 
     protected override void OnInitialize()
     {
@@ -134,8 +142,7 @@ public class NetworkManager : MonoSingleton<NetworkManager>
         try
         {
             ChatPacket chatPacket = ChatPacket.Deserialize(packet.Body);
-
-            Debug.Log($"[Chat] {chatPacket.UserName}: {chatPacket.Message}");
+            onChatReceived?.Invoke(chatPacket);
         }
         catch (System.Exception e)
         {
