@@ -9,8 +9,6 @@ public class ChatUI : MonoBehaviour
     [SerializeField]
     private RectTransform chatContent = null;
 
-    private ChatElement[] chatElement = null;
-
     private void Start()
     {
         NetworkManager.Instance.OnChatReceived += (chatPacket) =>
