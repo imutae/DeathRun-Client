@@ -131,6 +131,10 @@ public class NetworkManager : MonoSingleton<NetworkManager>
                 HandleChatPacket(packet);
                 break;
 
+            case PacketId.E_ACCEPT:
+                EAcceptPacket eAcceptPacket = EAcceptPacket.Deserialize(packet.Body);
+                PlayerManager.Instance.SetPlayerName(eAcceptPacket.SessionId.ToString());
+                break;
             default:
                 Debug.LogWarning($"Unknown Packet. Id: {packet.Id}, Size: {packet.Size}");
                 break;

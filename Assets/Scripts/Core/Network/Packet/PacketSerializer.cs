@@ -3,6 +3,17 @@ using System.Text;
 
 public static class PacketSerializer
 {
+    public static void WriteInt64(byte[] buffer, int offset, long value)
+    {
+        byte[] bytes = BitConverter.GetBytes(value);
+        Buffer.BlockCopy(bytes, 0, buffer, offset, bytes.Length);
+    }
+
+    public static long ReadInt64(byte[] buffer, int offset)
+    {
+        return BitConverter.ToInt64(buffer, offset);
+    }
+
     /// <summary>
     /// 고정 길이 문자열 쓰기 (C++ char[] 대응)
     /// </summary>
