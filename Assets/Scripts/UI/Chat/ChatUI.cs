@@ -9,13 +9,24 @@ public class ChatUI : MonoBehaviour
     [SerializeField]
     private RectTransform chatContent = null;
 
-    private void Start()
+    private async void Start()
     {
-        NetworkManager.Instance.OnChatReceived += (chatPacket) =>
-        {
-            string message = $"{chatPacket.UserName}: {chatPacket.Message}";
-            PoolManager.Instance.SpawnAsync(Address.ChatElementPrefab, Vector3.zero, Quaternion.identity, chatContent).Result.GetComponent<ChatElement>().SetChatText(message);
-        };
+        await PoolManager.Instance.PreloadAsync(Address.ChatElementPrefab, 10);
+
+        NetworkManager.Instance.OnChatReceived += HandleChatReceived;
+    }
+
+    private void HandleChatReceived(ChatPacket chatPacket)
+    {
+        string message = $"{chatPacket.UserName}: {chatPacket.Message}";
+
+        GameObject chatObject = PoolManager.Instance.Spawn(
+            Address.ChatElementPrefab,
+            Vector3.zero,
+            Quaternion.identity,
+            chatContent);
+
+        chatObject.GetComponent<ChatElement>().SetChatText(message);
     }
 
     public void OnClickSendButton()

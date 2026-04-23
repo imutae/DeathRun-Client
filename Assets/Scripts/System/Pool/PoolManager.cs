@@ -95,6 +95,34 @@ public sealed class PoolManager : MonoSingleton<PoolManager>
         return SpawnAsync(address, position, Quaternion.identity, parent);
     }
 
+    public GameObject Spawn(
+        string address,
+        Vector3 position,
+        Quaternion rotation,
+        Transform parent = null)
+    {
+        ValidateAddress(address);
+
+        if (!_pools.TryGetValue(address, out Pool pool))
+        {
+            throw new InvalidOperationException(
+                $"Pool is not preloaded. Call PreloadAsync first. Address: {address}");
+        }
+
+        GameObject instance = RentInstance(pool);
+
+        pool.ActiveObjects.Add(instance);
+
+        Transform tr = instance.transform;
+        tr.SetParent(parent, true);
+        tr.SetPositionAndRotation(position, rotation);
+
+        instance.SetActive(true);
+        InvokeSpawned(instance);
+
+        return instance;
+    }
+
     /// <summary>
     /// 오브젝트를 삭제하지 않고 풀에 반납한다.
     /// </summary>
