@@ -7,8 +7,6 @@ public class NetworkManager : MonoSingleton<NetworkManager>
     private const string SERVER_IP = "127.0.0.1";
     private const int SERVER_PORT = 7777;
 
-    private const string DEFAULT_USER_NAME = "Player1";
-
     private TcpClientCore tcpClientCore = null;
 
     private readonly Queue<Packet> receivedPacketQueue = new Queue<Packet>();
@@ -76,7 +74,7 @@ public class NetworkManager : MonoSingleton<NetworkManager>
 
         ChatPacket chatPacket = new ChatPacket
         {
-            UserName = DEFAULT_USER_NAME,
+            UserName = PlayerManager.Instance.PlayerName,
             Message = message
         };
 
@@ -133,7 +131,7 @@ public class NetworkManager : MonoSingleton<NetworkManager>
 
             case PacketId.E_ACCEPT:
                 EAcceptPacket eAcceptPacket = EAcceptPacket.Deserialize(packet.Body);
-                PlayerManager.Instance.SetPlayerName(eAcceptPacket.SessionId.ToString());
+                PlayerManager.Instance.SetPlayerName(eAcceptPacket.SessionId);
                 break;
             default:
                 Debug.LogWarning($"Unknown Packet. Id: {packet.Id}, Size: {packet.Size}");

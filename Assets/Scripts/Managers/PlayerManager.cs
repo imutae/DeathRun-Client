@@ -2,10 +2,10 @@ using UnityEngine;
 
 public class PlayerManager : MonoSingleton<PlayerManager>
 {
-    private string playerName = "";
-    public string PlayerName => playerName;
+    private long playerName = 0;
+    public long PlayerName => playerName;
 
-    public void SetPlayerName(string name)
+    public void SetPlayerName(long name)
     {
         playerName = name;
     }

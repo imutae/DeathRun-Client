@@ -1,6 +1,6 @@
 public class ChatPacket
 {
-    public string UserName;
+    public long UserName;
     public string Message;
 
     private const int USERNAME_SIZE = 32;
@@ -10,7 +10,7 @@ public class ChatPacket
     {
         byte[] body = new byte[USERNAME_SIZE + MESSAGE_SIZE];
 
-        PacketSerializer.WriteFixedString(body, 0, USERNAME_SIZE, UserName);
+        PacketSerializer.WriteInt64(body, 0, UserName);
         PacketSerializer.WriteFixedString(body, USERNAME_SIZE, MESSAGE_SIZE, Message);
 
         return PacketBuilder.Build(1, body);
@@ -20,7 +20,7 @@ public class ChatPacket
     {
         ChatPacket packet = new ChatPacket();
 
-        packet.UserName = PacketSerializer.ReadFixedString(body, 0, USERNAME_SIZE);
+        packet.UserName = PacketSerializer.ReadInt64(body, 0);
         packet.Message = PacketSerializer.ReadFixedString(body, USERNAME_SIZE, MESSAGE_SIZE);
 
         return packet;
