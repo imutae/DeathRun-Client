@@ -46,9 +46,6 @@ public static class PacketSerializer
         return BitConverter.ToSingle(buffer, offset);
     }
 
-    /// <summary>
-    /// 고정 길이 문자열 쓰기 (C++ char[] 대응)
-    /// </summary>
     public static void WriteFixedString(byte[] buffer, int offset, int maxSize, string value)
     {
         Array.Clear(buffer, offset, maxSize);
@@ -58,19 +55,18 @@ public static class PacketSerializer
 
         byte[] bytes = Encoding.UTF8.GetBytes(value);
         int copySize = Math.Min(bytes.Length, maxSize);
-
         Buffer.BlockCopy(bytes, 0, buffer, offset, copySize);
     }
 
-    /// <summary>
-    /// 고정 길이 문자열 읽기
-    /// </summary>
     public static string ReadFixedString(byte[] buffer, int offset, int maxSize)
     {
         int length = 0;
 
         for (int i = 0; i < maxSize; i++)
         {
+            if (offset + i >= buffer.Length)
+                break;
+
             if (buffer[offset + i] == 0)
                 break;
 

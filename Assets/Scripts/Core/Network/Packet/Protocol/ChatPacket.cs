@@ -3,21 +3,15 @@ public class ChatPacket
     private const int SESSION_ID_SIZE = 8;
     private const int MESSAGE_SIZE = ProtocolConstants.MaxChatLength;
 
-    public long SessionId;
+    // 실제 의미는 서버 SessionId
+    public long UserName;
     public string Message = string.Empty;
-
-    // 기존 NetworkManager / ChatUI 호환용
-    public long UserName
-    {
-        get => SessionId;
-        set => SessionId = value;
-    }
 
     public byte[] Serialize()
     {
         byte[] body = new byte[SESSION_ID_SIZE + MESSAGE_SIZE];
 
-        PacketSerializer.WriteInt64(body, 0, SessionId);
+        PacketSerializer.WriteInt64(body, 0, UserName);
         PacketSerializer.WriteFixedString(body, SESSION_ID_SIZE, MESSAGE_SIZE, Message);
 
         return PacketBuilder.Build((ushort)PacketId.R_CHAT, body);
@@ -27,7 +21,7 @@ public class ChatPacket
     {
         ChatPacket packet = new ChatPacket();
 
-        packet.SessionId = PacketSerializer.ReadInt64(body, 0);
+        packet.UserName = PacketSerializer.ReadInt64(body, 0);
         packet.Message = PacketSerializer.ReadFixedString(body, SESSION_ID_SIZE, MESSAGE_SIZE);
 
         return packet;
