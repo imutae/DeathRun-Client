@@ -44,7 +44,7 @@
 
 주요 역할은 다음과 같습니다.
 
-- `127.0.0.1:7777` 서버 접속
+- 서버 접속
 - 수신 패킷 큐 관리
 - 메인 스레드에서 패킷 처리
 - `S_CHAT`, `E_ACCEPT` 등 패킷 분기 처리
@@ -81,7 +81,7 @@ Unity 클라이언트에서도 서버와 동일한 방향으로
 ### 6. Addressables + Pooling
 UI 오브젝트 생성 비용을 줄이기 위해,
 Addressables와 PoolManager를 결합한 구조를 사용하고 있습니다.
-
+ 
 - `AddressableManager` : 프리팹 로드/캐시
 - `PoolManager` : 오브젝트 preload / spawn / 재사용
 - `IPoolable` : spawn/despawn 시점 훅 제공
