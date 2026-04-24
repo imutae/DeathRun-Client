@@ -307,6 +307,7 @@ public class NetworkManager : MonoSingleton<NetworkManager>
                 Debug.Log($"规 积己/曼啊 己傍. PlayerCount: {joinPacket.PlayerCount}");
             }
 
+            SceneLoadManager.Instance.LoadGameScene(joinPacket);
             onJoinResultReceived?.Invoke(joinPacket);
         }
         catch (Exception e)
