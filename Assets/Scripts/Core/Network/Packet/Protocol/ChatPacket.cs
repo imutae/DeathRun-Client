@@ -1,27 +1,34 @@
 public class ChatPacket
 {
-    public long UserName;
-    public string Message;
+    private const int SESSION_ID_SIZE = 8;
+    private const int MESSAGE_SIZE = ProtocolConstants.MaxChatLength;
 
-    private const int USERNAME_SIZE = 32;
-    private const int MESSAGE_SIZE = 256;
+    public long SessionId;
+    public string Message = string.Empty;
+
+    // 기존 NetworkManager / ChatUI 호환용
+    public long UserName
+    {
+        get => SessionId;
+        set => SessionId = value;
+    }
 
     public byte[] Serialize()
     {
-        byte[] body = new byte[USERNAME_SIZE + MESSAGE_SIZE];
+        byte[] body = new byte[SESSION_ID_SIZE + MESSAGE_SIZE];
 
-        PacketSerializer.WriteInt64(body, 0, UserName);
-        PacketSerializer.WriteFixedString(body, USERNAME_SIZE, MESSAGE_SIZE, Message);
+        PacketSerializer.WriteInt64(body, 0, SessionId);
+        PacketSerializer.WriteFixedString(body, SESSION_ID_SIZE, MESSAGE_SIZE, Message);
 
-        return PacketBuilder.Build(1, body);
+        return PacketBuilder.Build((ushort)PacketId.R_CHAT, body);
     }
 
     public static ChatPacket Deserialize(byte[] body)
     {
         ChatPacket packet = new ChatPacket();
 
-        packet.UserName = PacketSerializer.ReadInt64(body, 0);
-        packet.Message = PacketSerializer.ReadFixedString(body, USERNAME_SIZE, MESSAGE_SIZE);
+        packet.SessionId = PacketSerializer.ReadInt64(body, 0);
+        packet.Message = PacketSerializer.ReadFixedString(body, SESSION_ID_SIZE, MESSAGE_SIZE);
 
         return packet;
     }
