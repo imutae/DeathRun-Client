@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: Default Local Group
   m_GUID: 2bbe77a6717d10841abd62db8b8c58ac
   m_SerializeEntries:
+  - m_GUID: 06d0e9f6c3cee5842bb3e7455b0fa46f
+    m_Address: OtherCharacter
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: eee8c565a38e46f4da86a5c411806f63
     m_Address: ChatElement
     m_ReadOnly: 0
