@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -20,6 +21,48 @@ public class NetworkManager : MonoSingleton<NetworkManager>
     {
         add { onChatReceived += value; }
         remove { onChatReceived -= value; }
+    }
+
+    private UnityAction<SRoomListPacket> onRoomListReceived;
+    public event UnityAction<SRoomListPacket> OnRoomListReceived
+    {
+        add { onRoomListReceived += value; }
+        remove { onRoomListReceived -= value; }
+    }
+
+    private UnityAction<SJoinPacket> onJoinResultReceived;
+    public event UnityAction<SJoinPacket> OnJoinResultReceived
+    {
+        add { onJoinResultReceived += value; }
+        remove { onJoinResultReceived -= value; }
+    }
+
+    private UnityAction<long> onOtherPlayerJoined;
+    public event UnityAction<long> OnOtherPlayerJoined
+    {
+        add { onOtherPlayerJoined += value; }
+        remove { onOtherPlayerJoined -= value; }
+    }
+
+    private UnityAction<long> onOtherPlayerLeft;
+    public event UnityAction<long> OnOtherPlayerLeft
+    {
+        add { onOtherPlayerLeft += value; }
+        remove { onOtherPlayerLeft -= value; }
+    }
+
+    private UnityAction<SMovePacket> onMoveReceived;
+    public event UnityAction<SMovePacket> OnMoveReceived
+    {
+        add { onMoveReceived += value; }
+        remove { onMoveReceived -= value; }
+    }
+
+    private UnityAction onLeftRoom;
+    public event UnityAction OnLeftRoom
+    {
+        add { onLeftRoom += value; }
+        remove { onLeftRoom -= value; }
     }
 
     protected override void OnInitialize()
@@ -64,13 +107,24 @@ public class NetworkManager : MonoSingleton<NetworkManager>
         base.OnApplicationQuit();
     }
 
-    public void SendChat(string message)
+    private bool CanSend()
     {
         if (tcpClientCore == null || !tcpClientCore.IsConnected)
         {
             Debug.LogWarning("서버에 연결되지 않음");
-            return;
+            return false;
         }
+
+        return true;
+    }
+
+    public void SendChat(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            return;
+
+        if (!CanSend())
+            return;
 
         ChatPacket chatPacket = new ChatPacket
         {
@@ -78,9 +132,60 @@ public class NetworkManager : MonoSingleton<NetworkManager>
             Message = message
         };
 
-        byte[] packet = chatPacket.Serialize();
+        tcpClientCore.Send(chatPacket.Serialize());
+    }
 
-        tcpClientCore.Send(packet);
+    public void RequestRoomList()
+    {
+        if (!CanSend())
+            return;
+
+        RRoomListPacket packet = new RRoomListPacket();
+        tcpClientCore.Send(packet.Serialize());
+    }
+
+    public void CreateRoom()
+    {
+        JoinRoom(ProtocolConstants.InvalidRoomId);
+    }
+
+    public void JoinRoom(ushort roomId)
+    {
+        if (!CanSend())
+            return;
+
+        RJoinPacket packet = new RJoinPacket
+        {
+            RoomId = roomId
+        };
+
+        tcpClientCore.Send(packet.Serialize());
+    }
+
+    public void SendMove(Vector2 position)
+    {
+        if (!CanSend())
+            return;
+
+        RMovePacket packet = new RMovePacket
+        {
+            X = position.x,
+            Y = position.y
+        };
+
+        tcpClientCore.Send(packet.Serialize());
+    }
+
+    public void LeaveRoom()
+    {
+        if (!CanSend())
+            return;
+
+        NLeavePacket packet = new NLeavePacket();
+        tcpClientCore.Send(packet.Serialize());
+
+        // N_LEAVE는 클라 -> 서버 일방 알림이므로 서버 응답을 기다리지 않는다.
+        onLeftRoom?.Invoke();
     }
 
     private void OnPacketReceived(Packet packet)
@@ -128,20 +233,31 @@ public class NetworkManager : MonoSingleton<NetworkManager>
             case PacketId.S_CHAT:
                 HandleChatPacket(packet);
                 break;
+
             case PacketId.E_ACCEPT:
-                EAcceptPacket eAcceptPacket = EAcceptPacket.Deserialize(packet.Body);
-                PlayerManager.Instance.SetPlayerName(eAcceptPacket.SessionId);
+                HandleAcceptPacket(packet);
                 break;
+
             case PacketId.S_JOIN:
+                HandleJoinPacket(packet);
                 break;
+
             case PacketId.S_MOVE:
+                HandleMovePacket(packet);
                 break;
+
             case PacketId.E_JOIN:
+                HandleOtherPlayerJoinedPacket(packet);
                 break;
+
             case PacketId.E_LEAVE:
+                HandleOtherPlayerLeftPacket(packet);
                 break;
+
             case PacketId.S_ROOM_LIST:
+                HandleRoomListPacket(packet);
                 break;
+
             default:
                 Debug.LogWarning($"Unknown Packet. Id: {packet.Id}, Size: {packet.Size}");
                 break;
@@ -155,9 +271,108 @@ public class NetworkManager : MonoSingleton<NetworkManager>
             ChatPacket chatPacket = ChatPacket.Deserialize(packet.Body);
             onChatReceived?.Invoke(chatPacket);
         }
-        catch (System.Exception e)
+        catch (Exception e)
         {
             Debug.LogError($"ChatPacket 처리 실패: {e.Message}");
+        }
+    }
+
+    private void HandleAcceptPacket(Packet packet)
+    {
+        try
+        {
+            EAcceptPacket eAcceptPacket = EAcceptPacket.Deserialize(packet.Body);
+            PlayerManager.Instance.SetPlayerName(eAcceptPacket.SessionId);
+
+            Debug.Log($"SessionId 수신: {eAcceptPacket.SessionId}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"EAcceptPacket 처리 실패: {e.Message}");
+        }
+    }
+
+    private void HandleJoinPacket(Packet packet)
+    {
+        try
+        {
+            SJoinPacket joinPacket = SJoinPacket.Deserialize(packet.Body);
+
+            if (!joinPacket.IsSuccess)
+            {
+                Debug.LogWarning("방 생성/참가 실패");
+            }
+            else
+            {
+                Debug.Log($"방 생성/참가 성공. PlayerCount: {joinPacket.PlayerCount}");
+            }
+
+            onJoinResultReceived?.Invoke(joinPacket);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"SJoinPacket 처리 실패: {e.Message}");
+        }
+    }
+
+    private void HandleMovePacket(Packet packet)
+    {
+        try
+        {
+            SMovePacket movePacket = SMovePacket.Deserialize(packet.Body);
+
+            // 서버가 내 이동도 다시 브로드캐스트하므로,
+            // 실제 반영하는 쪽에서 내 sessionId면 무시해도 된다.
+            onMoveReceived?.Invoke(movePacket);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"SMovePacket 처리 실패: {e.Message}");
+        }
+    }
+
+    private void HandleOtherPlayerJoinedPacket(Packet packet)
+    {
+        try
+        {
+            EJoinPacket joinPacket = EJoinPacket.Deserialize(packet.Body);
+
+            Debug.Log($"다른 플레이어 입장: {joinPacket.SessionId}");
+            onOtherPlayerJoined?.Invoke(joinPacket.SessionId);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"EJoinPacket 처리 실패: {e.Message}");
+        }
+    }
+
+    private void HandleOtherPlayerLeftPacket(Packet packet)
+    {
+        try
+        {
+            ELeavePacket leavePacket = ELeavePacket.Deserialize(packet.Body);
+
+            Debug.Log($"다른 플레이어 퇴장: {leavePacket.SessionId}");
+            onOtherPlayerLeft?.Invoke(leavePacket.SessionId);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"ELeavePacket 처리 실패: {e.Message}");
+        }
+    }
+
+    private void HandleRoomListPacket(Packet packet)
+    {
+        try
+        {
+            SRoomListPacket roomListPacket = SRoomListPacket.Deserialize(packet.Body);
+
+            Debug.Log($"방 목록 수신. RoomCount: {roomListPacket.RoomCount}");
+            onRoomListReceived?.Invoke(roomListPacket);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"SRoomListPacket 처리 실패: {e.Message}");
         }
     }
 
