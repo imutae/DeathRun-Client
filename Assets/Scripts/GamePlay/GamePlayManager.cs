@@ -5,13 +5,13 @@ public class GamePlayManager : MonoBehaviour
 {
     private Dictionary<long, GameObject> _otherPlayers = new Dictionary<long, GameObject>();
 
-    private void Awake()
+    private async void Awake()
     {
         NetworkManager.Instance.OnOtherPlayerJoined += JoinOtherUser;
         NetworkManager.Instance.OnOtherPlayerLeft += ExitOtherUser;
         NetworkManager.Instance.OnMoveReceived += OtherPlayerMoveRecive;
 
-        PoolManager.Instance.PreloadAsync("OtherCharacter", 7).Wait();
+        await PoolManager.Instance.PreloadAsync("OtherCharacter", 7);
     }
 
     private void Start()
@@ -22,10 +22,9 @@ public class GamePlayManager : MonoBehaviour
         {
             JoinOtherUser(userId);
         }
-
     }
 
-    private void JoinOtherUser(long userId)
+    private async void JoinOtherUser(long userId)
     {
         if (userId == PlayerManager.Instance.PlayerName)
         {
@@ -37,7 +36,7 @@ public class GamePlayManager : MonoBehaviour
             return;
         }
 
-        GameObject otherCharacter = PoolManager.Instance.Spawn("OtherCharacter", Vector3.zero, Quaternion.identity);
+        GameObject otherCharacter = await PoolManager.Instance.SpawnAsync("OtherCharacter", Vector3.zero, Quaternion.identity);
         _otherPlayers.Add(userId, otherCharacter);
     }
 
@@ -66,16 +65,19 @@ public class GamePlayManager : MonoBehaviour
 
     public void ExitGame()
     {
-        // Scene 전환
-        NetworkManager.Instance.LeaveRoom();
-        SceneLoadManager.Instance.LoadLobbyScene();
-    }
+        foreach (var otherPlayer in _otherPlayers.Values)
+        {
+            PoolManager.Instance.Despawn(otherPlayer);
+        }
 
-    private void OnDestroy()
-    {
-        // Callback 초기화
+        _otherPlayers.Clear();
+
         NetworkManager.Instance.OnOtherPlayerJoined -= JoinOtherUser;
         NetworkManager.Instance.OnOtherPlayerLeft -= ExitOtherUser;
         NetworkManager.Instance.OnMoveReceived -= OtherPlayerMoveRecive;
+
+        // Scene 전환
+        NetworkManager.Instance.LeaveRoom();
+        SceneLoadManager.Instance.LoadLobbyScene();
     }
 }
