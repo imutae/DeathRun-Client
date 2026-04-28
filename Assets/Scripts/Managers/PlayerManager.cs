@@ -1,12 +1,12 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class PlayerManager : MonoSingleton<PlayerManager>
 {
-    private long playerName = 0;
-    public long PlayerName => playerName;
+    private long sessionId = 0;
+    public long LocalSessionId => sessionId;
 
-    public void SetPlayerName(long name)
+    public void SetLocalSessionId(long id)
     {
-        playerName = name;
+        sessionId = id;
     }
 }

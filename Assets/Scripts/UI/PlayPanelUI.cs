@@ -1,3 +1,5 @@
+﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class PlayPanelUI : MonoBehaviour
@@ -8,33 +10,52 @@ public class PlayPanelUI : MonoBehaviour
     [SerializeField]
     private RoomJoinButtonHandle _roomJoinButtonHandle = null;
 
+    private NetworkManager _networkManager = null;
+
+    private List<RoomJoinButtonHandle> roomJoinButtons = new List<RoomJoinButtonHandle>();
+
+    private void Awake()
+    {
+        _networkManager = NetworkManager.Instance;
+        roomJoinButtons = _roomListContentTransform.GetComponentsInChildren<RoomJoinButtonHandle>(true).ToList();
+
+        if (roomJoinButtons.Count < ProtocolConstants.MaxRoomCount)
+        {
+            int buttonsToCreate = ProtocolConstants.MaxRoomCount - roomJoinButtons.Count;
+            for (int i = 0; i < buttonsToCreate; i++)
+            {
+                RoomJoinButtonHandle newButton = Instantiate(_roomJoinButtonHandle, _roomListContentTransform);
+                newButton.gameObject.SetActive(false);
+                roomJoinButtons.Add(newButton);
+            }
+        }
+    }
+
     private void OnEnable()
     {
-        NetworkManager.Instance.OnRoomListReceived += UpdateRoomList;
+        _networkManager.OnRoomListReceived += UpdateRoomList;
     }
 
     private void OnDisable()
     {
-        if (NetworkManager.Instance == null)
-            return;
-
-        NetworkManager.Instance.OnRoomListReceived -= UpdateRoomList;
+        _networkManager.OnRoomListReceived -= UpdateRoomList;
     }
 
     private void UpdateRoomList(SRoomListPacket packet)
     {
-        RoomJoinButtonHandle[] roomJoinButtons =
-            _roomListContentTransform.GetComponentsInChildren<RoomJoinButtonHandle>(true);
-
-        while (roomJoinButtons.Length < packet.RoomCount)
+        if(packet == null)
         {
-            Instantiate(_roomJoinButtonHandle.gameObject, _roomListContentTransform);
-
-            roomJoinButtons =
-                _roomListContentTransform.GetComponentsInChildren<RoomJoinButtonHandle>(true);
+            Debug.LogError("Received null packet in UpdateRoomList.");
+            return;
         }
 
-        for (int i = 0; i < roomJoinButtons.Length; i++)
+        if(packet.Rooms == null)
+        {
+            Debug.LogError("Received packet with null Rooms array in UpdateRoomList.");
+            return;
+        }
+
+        for (int i = 0; i < ProtocolConstants.MaxRoomCount; i++)
         {
             if (i < packet.RoomCount)
             {

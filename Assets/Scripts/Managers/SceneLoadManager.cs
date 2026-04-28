@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -43,13 +43,13 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
     {
         if (joinPacket == null)
         {
-            Debug.LogWarning("LoadGameScene ½ÇÆĞ: joinPacketÀÌ nullÀÔ´Ï´Ù.");
+            Debug.LogWarning("LoadGameScene ì‹¤íŒ¨: joinPacketì´ nullì…ë‹ˆë‹¤.");
             return;
         }
 
         if (!joinPacket.IsSuccess)
         {
-            Debug.LogWarning("LoadGameScene ½ÇÆĞ: S_JOIN °á°ú°¡ ½ÇÆĞÀÔ´Ï´Ù.");
+            Debug.LogWarning("LoadGameScene ì‹¤íŒ¨: S_JOIN ê²°ê³¼ê°€ ì‹¤íŒ¨ì…ë‹ˆë‹¤.");
             return;
         }
 
@@ -78,7 +78,7 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
         if (PlayerManager.Instance == null)
             return false;
 
-        return PlayerManager.Instance.PlayerName == sessionId;
+        return PlayerManager.Instance.LocalSessionId == sessionId;
     }
 
     public List<long> GetCurrentRoomSessionIdsSnapshot()
@@ -112,7 +112,7 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
     {
         if (IsLoading)
         {
-            Debug.LogWarning($"ÀÌ¹Ì ¾À ·Îµù ÁßÀÔ´Ï´Ù. ¿äÃ» ¹«½Ã: {sceneName}");
+            Debug.LogWarning($"ì´ë¯¸ ì”¬ ë¡œë”© ì¤‘ì…ë‹ˆë‹¤. ìš”ì²­ ë¬´ì‹œ: {sceneName}");
             return;
         }
 
@@ -128,7 +128,7 @@ public class SceneLoadManager : MonoSingleton<SceneLoadManager>
 
         if (operation == null)
         {
-            Debug.LogError($"¾À ·Îµå ½ÇÆĞ: {sceneName}");
+            Debug.LogError($"ì”¬ ë¡œë“œ ì‹¤íŒ¨: {sceneName}");
             IsLoading = false;
             yield break;
         }

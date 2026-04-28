@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class GamePlayManager : MonoBehaviour
@@ -26,7 +26,7 @@ public class GamePlayManager : MonoBehaviour
 
     private async void JoinOtherUser(long userId)
     {
-        if (userId == PlayerManager.Instance.PlayerName)
+        if (userId == PlayerManager.Instance.LocalSessionId)
         {
             return;
         }
@@ -42,7 +42,7 @@ public class GamePlayManager : MonoBehaviour
 
     private void ExitOtherUser(long userId)
     {
-        if (userId == PlayerManager.Instance.PlayerName)
+        if (userId == PlayerManager.Instance.LocalSessionId)
         {
             return;
         }
@@ -76,7 +76,7 @@ public class GamePlayManager : MonoBehaviour
         NetworkManager.Instance.OnOtherPlayerLeft -= ExitOtherUser;
         NetworkManager.Instance.OnMoveReceived -= OtherPlayerMoveRecive;
 
-        // Scene ��ȯ
+        // Scene 전환
         NetworkManager.Instance.LeaveRoom();
         SceneLoadManager.Instance.LoadLobbyScene();
     }

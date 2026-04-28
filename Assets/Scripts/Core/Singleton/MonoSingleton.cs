@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoBehaviour
 {
@@ -39,12 +39,17 @@ public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoBehaviour
 
         if (_instance != this)
         {
-            Debug.LogWarning($"Duplicate singleton detected: {typeof(T).Name}. Destroying duplicate.");
+            Debug.LogWarning(
+                $"Duplicate singleton detected: {typeof(T).Name}. Destroying duplicate."
+            );
+
             Destroy(gameObject);
         }
     }
 
-    protected virtual void OnInitialize() { }
+    protected virtual void OnInitialize()
+    {
+    }
 
     protected virtual void OnApplicationQuit()
     {
@@ -55,7 +60,6 @@ public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoBehaviour
     {
         if (_instance == this)
         {
-            _applicationIsQuitting = true;
             _instance = null;
         }
     }

@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 
 public class ChatUI : MonoBehaviour
@@ -18,7 +18,7 @@ public class ChatUI : MonoBehaviour
 
     private void HandleChatReceived(ChatPacket chatPacket)
     {
-        string message = $"{chatPacket.UserName}: {chatPacket.Message}";
+        string message = $"{chatPacket.SessionId}: {chatPacket.Message}";
 
         GameObject chatObject = PoolManager.Instance.Spawn(
             Address.ChatElementPrefab,
@@ -39,5 +39,10 @@ public class ChatUI : MonoBehaviour
 
         NetworkManager.Instance.SendChat(message);
         inputField.text = string.Empty;
+    }
+
+    private void OnDestroy()
+    {
+        NetworkManager.Instance.OnChatReceived -= HandleChatReceived;
     }
 }
