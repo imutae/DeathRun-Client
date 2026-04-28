@@ -12,8 +12,23 @@ public class RoomJoinButtonHandle : MonoBehaviour
     public void SetRoomInfo(RoomInfo roomInfo)
     {
         _roomInfo = roomInfo;
-        _text.text = $"Room {_roomInfo.RoomId} ({_roomInfo.CurrentPlayers}/{ProtocolConstants.MaxRoomPlayers})";
         _hasRoomInfo = true;
+
+        if (_text != null)
+        {
+            _text.text = $"Room {_roomInfo.RoomId} ({_roomInfo.CurrentPlayers}/{ProtocolConstants.MaxRoomPlayers})";
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (_text != null)
+        {
+            _text.text = string.Empty;
+        }
+
+        _roomInfo = new RoomInfo();
+        _hasRoomInfo = false;
     }
 
     public void OnClickJoinRoomButton()
@@ -25,12 +40,5 @@ public class RoomJoinButtonHandle : MonoBehaviour
         }
 
         NetworkManager.Instance.JoinRoom(_roomInfo.RoomId);
-    }
-
-    private void OnDisable()
-    {
-        _text.text = string.Empty;
-        _roomInfo = new RoomInfo();
-        _hasRoomInfo = false;
     }
 }

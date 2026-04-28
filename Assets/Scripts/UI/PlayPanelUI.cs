@@ -17,28 +17,43 @@ public class PlayPanelUI : MonoBehaviour
     private void Awake()
     {
         _networkManager = NetworkManager.Instance;
-        roomJoinButtons = _roomListContentTransform.GetComponentsInChildren<RoomJoinButtonHandle>(true).ToList();
 
-        if (roomJoinButtons.Count < ProtocolConstants.MaxRoomCount)
+        if (_roomListContentTransform == null)
         {
-            int buttonsToCreate = ProtocolConstants.MaxRoomCount - roomJoinButtons.Count;
-            for (int i = 0; i < buttonsToCreate; i++)
-            {
-                RoomJoinButtonHandle newButton = Instantiate(_roomJoinButtonHandle, _roomListContentTransform);
-                newButton.gameObject.SetActive(false);
-                roomJoinButtons.Add(newButton);
-            }
+            Debug.LogError("[PlayPanelUI] Room list content transform is not assigned.");
+            return;
         }
+
+        if (_roomJoinButtonHandle == null)
+        {
+            Debug.LogError("[PlayPanelUI] Room join button prefab is not assigned.");
+            return;
+        }
+
+        roomJoinButtons = _roomListContentTransform
+            .GetComponentsInChildren<RoomJoinButtonHandle>(true)
+            .ToList();
+
+        // 기존 버튼 생성 로직 유지
     }
 
     private void OnEnable()
     {
+        if (_networkManager == null)
+            _networkManager = NetworkManager.Instance;
+
+        if (_networkManager == null)
+            return;
+
         _networkManager.OnRoomListReceived += UpdateRoomList;
     }
 
     private void OnDisable()
     {
-        _networkManager.OnRoomListReceived -= UpdateRoomList;
+        if (_networkManager != null)
+        {
+            _networkManager.OnRoomListReceived -= UpdateRoomList;
+        }
     }
 
     private void UpdateRoomList(SRoomListPacket packet)

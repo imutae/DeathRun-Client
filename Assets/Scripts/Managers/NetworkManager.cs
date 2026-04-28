@@ -298,16 +298,16 @@ public class NetworkManager : MonoSingleton<NetworkManager>
         {
             SJoinPacket joinPacket = SJoinPacket.Deserialize(packet.Body);
 
+            onJoinResultReceived?.Invoke(joinPacket);
+
             if (!joinPacket.IsSuccess)
             {
                 Debug.LogWarning("방 생성/참가 실패");
+                return;
             }
-            else
-            {
-                Debug.Log($"방 생성/참가 성공. PlayerCount: {joinPacket.PlayerCount}");
-                SceneLoadManager.Instance.LoadGameScene(joinPacket);
-                onJoinResultReceived?.Invoke(joinPacket);
-            }
+
+            Debug.Log($"방 생성/참가 성공. PlayerCount: {joinPacket.PlayerCount}");
+            SceneLoadManager.Instance.LoadGameScene(joinPacket);
         }
         catch (Exception e)
         {
