@@ -10,17 +10,19 @@ public class GamePlayManager : MonoBehaviour
         NetworkManager.Instance.OnOtherPlayerJoined += JoinOtherUser;
         NetworkManager.Instance.OnOtherPlayerLeft += ExitOtherUser;
         NetworkManager.Instance.OnMoveReceived += OtherPlayerMoveRecive;
-        NetworkManager.Instance.OnJoinResultReceived += JoinGame;
 
         PoolManager.Instance.PreloadAsync("OtherCharacter", 7).Wait();
-    }    
+    }
 
-    private void JoinGame(SJoinPacket joinPacket)
+    private void Start()
     {
-        for(int i = 0; i < joinPacket.PlayerCount; i++)
+        List<long> userIds = SceneLoadManager.Instance.GetCurrentRoomSessionIdsSnapshot();
+
+        foreach (long userId in userIds)
         {
-            JoinOtherUser(joinPacket.SessionIds[i]);
+            JoinOtherUser(userId);
         }
+
     }
 
     private void JoinOtherUser(long userId)
@@ -75,6 +77,5 @@ public class GamePlayManager : MonoBehaviour
         NetworkManager.Instance.OnOtherPlayerJoined -= JoinOtherUser;
         NetworkManager.Instance.OnOtherPlayerLeft -= ExitOtherUser;
         NetworkManager.Instance.OnMoveReceived -= OtherPlayerMoveRecive;
-        NetworkManager.Instance.OnJoinResultReceived -= JoinGame;
     }
 }

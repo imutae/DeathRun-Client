@@ -8,36 +8,43 @@ public class PlayPanelUI : MonoBehaviour
     [SerializeField]
     private RoomJoinButtonHandle _roomJoinButtonHandle = null;
 
-    private void Start()
+    private void OnEnable()
     {
         NetworkManager.Instance.OnRoomListReceived += UpdateRoomList;
     }
 
+    private void OnDisable()
+    {
+        if (NetworkManager.Instance == null)
+            return;
+
+        NetworkManager.Instance.OnRoomListReceived -= UpdateRoomList;
+    }
+
     private void UpdateRoomList(SRoomListPacket packet)
     {
-        RoomJoinButtonHandle[] roomJoinButtons = _roomListContentTransform.GetComponentsInChildren<RoomJoinButtonHandle>();
-        if(packet.RoomCount >= roomJoinButtons.Length)
+        RoomJoinButtonHandle[] roomJoinButtons =
+            _roomListContentTransform.GetComponentsInChildren<RoomJoinButtonHandle>(true);
+
+        while (roomJoinButtons.Length < packet.RoomCount)
         {
-            for (int i = roomJoinButtons.Length; i <= packet.RoomCount; i++)
-            {
-                Instantiate(_roomJoinButtonHandle.gameObject, _roomListContentTransform);
-            }
+            Instantiate(_roomJoinButtonHandle.gameObject, _roomListContentTransform);
+
+            roomJoinButtons =
+                _roomListContentTransform.GetComponentsInChildren<RoomJoinButtonHandle>(true);
         }
 
-        roomJoinButtons = _roomListContentTransform.GetComponentsInChildren<RoomJoinButtonHandle>();
-
-        for (int i = 1; i < roomJoinButtons.Length; i++)
+        for (int i = 0; i < roomJoinButtons.Length; i++)
         {
-            if(i <= packet.RoomCount)
+            if (i < packet.RoomCount)
             {
                 RoomInfo roomInfo = packet.Rooms[i];
-                roomJoinButtons[i - 1].SetRoomInfo(roomInfo);
-
-                roomJoinButtons[i - 1].gameObject.SetActive(true);
+                roomJoinButtons[i].SetRoomInfo(roomInfo);
+                roomJoinButtons[i].gameObject.SetActive(true);
             }
             else
             {
-                roomJoinButtons[i - 1].gameObject.SetActive(false);
+                roomJoinButtons[i].gameObject.SetActive(false);
             }
         }
     }
