@@ -10,13 +10,27 @@ public class GamePlayManager : MonoBehaviour
         NetworkManager.Instance.OnOtherPlayerJoined += JoinOtherUser;
         NetworkManager.Instance.OnOtherPlayerLeft += ExitOtherUser;
         NetworkManager.Instance.OnMoveReceived += OtherPlayerMoveRecive;
+        NetworkManager.Instance.OnJoinResultReceived += JoinGame;
 
         PoolManager.Instance.PreloadAsync("OtherCharacter", 7).Wait();
     }    
 
+    private void JoinGame(SJoinPacket joinPacket)
+    {
+        for(int i = 0; i < joinPacket.PlayerCount; i++)
+        {
+            JoinOtherUser(joinPacket.SessionIds[i]);
+        }
+    }
+
     private void JoinOtherUser(long userId)
     {
         if (userId == PlayerManager.Instance.PlayerName)
+        {
+            return;
+        }
+
+        if(_otherPlayers.ContainsKey(userId))
         {
             return;
         }
@@ -50,12 +64,17 @@ public class GamePlayManager : MonoBehaviour
 
     public void ExitGame()
     {
-        // Callback 초기화
-        NetworkManager.Instance.OnOtherPlayerJoined -= JoinOtherUser;
-        NetworkManager.Instance.OnOtherPlayerLeft -= ExitOtherUser;
-
         // Scene 전환
         NetworkManager.Instance.LeaveRoom();
         SceneLoadManager.Instance.LoadLobbyScene();
+    }
+
+    private void OnDestroy()
+    {
+        // Callback 초기화
+        NetworkManager.Instance.OnOtherPlayerJoined -= JoinOtherUser;
+        NetworkManager.Instance.OnOtherPlayerLeft -= ExitOtherUser;
+        NetworkManager.Instance.OnMoveReceived -= OtherPlayerMoveRecive;
+        NetworkManager.Instance.OnJoinResultReceived -= JoinGame;
     }
 }
